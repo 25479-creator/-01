@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STAT SPECTRUM // ระบบวิเคราะห์คะแนนสอบคณิตศาสตร์ ม.6/2</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,300;0,400;0,500;0,700;1,300&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            base: '#08080c',
+                            card: '#10111a',
+                            border: '#1f2235',
+                            accentRed: '#ff2a5f',
+                            accentPurple: '#9333ea',
+                            accentCyan: '#06b6d4',
+                            accentGreen: '#10b981',
+                            glow: '#ff2a5f22'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Kanit', 'sans-serif'],
+                        mono: ['Share Tech Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Styling & Aesthetics */
+        body {
+            background-color: #06070a;
+            color: #e2e8f0;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(255, 42, 95, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(147, 51, 234, 0.05) 0%, transparent 40%),
+                linear-gradient(to right, rgba(255, 255, 255, 0.01) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.01) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+        }
+
+        .glow-box-red {
+            box-shadow: 0 0 25px rgba(255, 42, 95, 0.25), inset 0 0 15px rgba(255, 42, 95, 0.1);
+        }
+
+        .glow-text-red {
+            text-shadow: 0 0 10px rgba(255, 42, 95, 0.6);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d0e15;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #26293c;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff2a5f;
+        }
+
+        .outlier-node {
+            animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans selection:bg-rose-500 selection:text-white">
+
+    <header class="border-b border-dark-border bg-dark-card/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-rose-600 via-purple-700 to-cyan-600 flex items-center justify-center shadow-lg shadow-rose-950/50">
+                    <i class="fa-solid fa-calculator text-xl text-white"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-mono text-xl font-bold tracking-wider text-rose-500 glow-text-red">MATH//SPECTRUM</h1>
+                        <span class="text-[10px] font-mono bg-rose-950/80 border border-rose-800/50 text-rose-300 px-2 py-0.5 rounded uppercase tracking-widest">วิชาคณิตศาสตร์ ม.6/2</span>
+                    </div>
+                    <p class="text-xs text-slate-400">ระบบวิเคราะห์และประมวลผลคะแนนสอบวิชาคณิตศาสตร์ ด้วยแผนภาพกล่อง (Box Plot Analysis)</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <button id="btn-tutorial" class="text-xs font-mono bg-dark-border hover:bg-slate-800 text-slate-300 px-3 py-2 rounded-lg transition-all border border-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-book-open text-rose-400"></i> คู่มือถอดรหัสกล่อง
+                </button>
+                <button id="btn-export-png" class="text-xs font-mono bg-rose-950/60 hover:bg-rose-900/80 text-rose-200 border border-rose-700/60 px-3 py-2 rounded-lg transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-download"></i> ส่งออกรายงาน (SVG)
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <section class="lg:col-span-4 space-y-5 flex flex-col">
+            
+            <!-- Mathematics Subject Info Card -->
+            <div class="bg-dark-card border border-dark-border rounded-xl p-4 shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="text-sm font-semibold text-rose-400 flex items-center">
+                        <i class="fa-solid fa-book-bookmark text-rose-500 mr-2"></i>วิชาคณิตศาสตร์ (ม.6/2)
+                    </h2>
+                    <span id="data-count-tag" class="text-xs font-mono text-cyan-400 bg-cyan-950/60 border border-cyan-800/60 px-2 py-0.5 rounded">n = 30</span>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    ชุดข้อมูลคะแนนสอบวิชาคณิตศาสตร์ เรื่อง สถิติและการวิเคราะห์ข้อมูลของนักเรียนชั้น ม.6/2
+                </p>
+            </div>
+
+            <!-- Custom Data Input Box -->
+            <div class="bg-dark-card border border-dark-border rounded-xl p-4 shadow-xl flex-grow flex flex-col justify-between">
+                <div>
+                    <!-- Sample Size n Adjustment Section -->
+                    <div class="mb-4 pb-3 border-b border-slate-800/80">
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="sample-size-input" class="text-xs font-semibold text-rose-400 flex items-center">
+                                <i class="fa-solid fa-users text-rose-500 mr-2"></i> กำหนดจำนวนนักเรียน (n)
+                            </label>
+                            <div class="flex items-center gap-1">
+                                <input type="number" id="sample-size-input" min="5" max="200" value="30" class="w-16 bg-black/80 border border-rose-800/60 rounded px-2 py-0.5 text-xs font-mono text-cyan-300 text-center focus:border-rose-500 focus:outline-none">
+                                <span class="text-xs text-slate-400">คน</span>
+                            </div>
+                        </div>
+                        <input type="range" id="sample-size-slider" min="5" max="200" value="30" step="1" class="w-full accent-rose-500 bg-slate-900 h-1.5 rounded-lg cursor-pointer mb-2">
+                        
+                        <!-- Quick Presets -->
+                        <div class="flex flex-wrap items-center gap-1 text-[10px] font-mono">
+                            <span class="text-slate-500 mr-1">ทางลัด:</span>
+                            <button type="button" class="btn-preset-n bg-slate-900 hover:bg-rose-950 border border-slate-800 hover:border-rose-700 text-slate-300 px-2 py-0.5 rounded transition-all" data-n="15">n=15</button>
+                            <button type="button" class="btn-preset-n bg-slate-900 hover:bg-rose-950 border border-slate-800 hover:border-rose-700 text-slate-300 px-2 py-0.5 rounded transition-all" data-n="30">n=30</button>
+                            <button type="button" class="btn-preset-n bg-slate-900 hover:bg-rose-950 border border-slate-800 hover:border-rose-700 text-slate-300 px-2 py-0.5 rounded transition-all" data-n="50">n=50</button>
+                            <button type="button" class="btn-preset-n bg-slate-900 hover:bg-rose-950 border border-slate-800 hover:border-rose-700 text-slate-300 px-2 py-0.5 rounded transition-all" data-n="100">n=100</button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-2">
+                        <label for="raw-data-input" class="text-sm font-semibold text-slate-300 flex items-center">
+                            <i class="fa-solid fa-sliders text-cyan-400 mr-2"></i> ป้อนคะแนนสอบคณิตศาสตร์ (0-100)
+                        </label>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-3">
+                        คั่นด้วยเครื่องหมาย (,) หรือป้อนช่วงเช่น <strong class="text-cyan-400">2-47</strong>, <strong class="text-cyan-400">1-100</strong> หรือซ้ำค่า เช่น <strong class="text-cyan-400">75*5</strong>
+                    </p>
+                    <textarea id="raw-data-input" rows="5" class="w-full bg-black/60 border border-dark-border focus:border-rose-500 focus:ring-1 focus:ring-rose-500 rounded-lg p-3 text-xs font-mono text-rose-300 transition-all resize-none shadow-inner" placeholder="48, 50, 55, 60, 65, 70, 75, 80, 85, 90, 98"></textarea>
+                </div>
+
+                <div class="mt-4 space-y-2">
+                    <button id="btn-update-data" class="w-full bg-gradient-to-r from-rose-700 to-purple-700 hover:from-rose-600 hover:to-purple-600 text-white font-medium text-xs py-2.5 rounded-lg transition-all shadow-lg shadow-rose-950/60 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-bolt"></i> คำนวณแผนภาพกล่อง
+                    </button>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="btn-reset-data" class="bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 text-xs py-2 rounded-lg transition-all flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-rotate-left text-rose-400"></i> ค่าเริ่มต้น
+                        </button>
+                        <button id="btn-random-data" class="bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-800 text-xs py-2 rounded-lg transition-all flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-dice text-purple-400"></i> สุ่มคะแนน
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sorted Data Viewer -->
+            <div class="bg-dark-card border border-dark-border rounded-xl p-4 shadow-xl">
+                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                    <span><i class="fa-solid fa-arrow-down-1-9 text-purple-400 mr-2"></i>คะแนนเรียงลำดับ (Sorted Scores)</span>
+                    <span id="outlier-alert-tag" class="text-[10px] text-amber-400 bg-amber-950/50 border border-amber-800/50 px-1.5 py-0.5 rounded hidden">Outliers Detected!</span>
+                </h3>
+                <div id="sorted-data-list" class="max-h-36 overflow-y-auto p-2 bg-black/40 border border-slate-900 rounded-lg flex flex-wrap gap-1.5 font-mono text-xs">
+                    <!-- Dynamic badges populated via JS -->
+                </div>
+            </div>
+
+        </section>
+
+        <section class="lg:col-span-8 space-y-6 flex flex-col">
+
+            <!-- Primary Box Plot Interactive Display Card -->
+            <div class="bg-dark-card border border-dark-border rounded-xl p-5 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+                
+                <div class="flex flex-wrap justify-between items-start mb-4 gap-2">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                            <h2 class="text-base font-semibold text-slate-100 tracking-wide" id="plot-title">แผนภาพกล่องแสดงการกระจายคะแนนสอบวิชาคณิตศาสตร์ ม.6/2</h2>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1" id="plot-subtitle">การวิเคราะห์สถิติ 5 ค่า (Five-Number Summary) และคะแนนผิดปกติ (Outliers)</p>
+                    </div>
+
+                    <!-- Quick Indicator Badges -->
+                    <div class="flex items-center gap-2 font-mono text-xs">
+                        <div class="bg-rose-950/80 border border-rose-800 text-rose-300 px-3 py-1 rounded-md text-center">
+                            <span class="text-[10px] block text-rose-400 uppercase">Median (มัธยฐาน)</span>
+                            <span id="badge-median" class="text-sm font-bold">71.0</span>
+                        </div>
+                        <div class="bg-purple-950/80 border border-purple-800 text-purple-300 px-3 py-1 rounded-md text-center">
+                            <span class="text-[10px] block text-purple-400 uppercase">IQR (พิสัยควอร์ไทล์)</span>
+                            <span id="badge-iqr" class="text-sm font-bold">10.0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SVG Box Plot Container -->
+                <div class="relative w-full bg-slate-950/90 border border-slate-800/80 rounded-xl p-4 my-2 shadow-inner min-h-[280px] flex items-center justify-center">
+                    
+                    <!-- Background Grid Lines -->
+                    <div class="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#ff2a5f_1px,transparent_1px)] [background-size:16px_16px]"></div>
+
+                    <!-- SVG Dynamic Graphics -->
+                    <svg id="boxplot-svg" class="w-full h-64 overflow-visible" viewBox="0 0 800 240">
+                        <!-- Rendered dynamically by JavaScript -->
+                    </svg>
+
+                    <!-- Tooltip Box -->
+                    <div id="boxplot-tooltip" class="absolute pointer-events-none opacity-0 transition-opacity bg-slate-900 border border-rose-500/80 text-rose-200 text-xs font-mono px-3 py-1.5 rounded-lg shadow-2xl z-20 backdrop-blur-md">
+                        <!-- Tooltip text -->
+                    </div>
+                </div>
+
+                <!-- Legend & Color Guide -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-dark-border text-xs text-slate-400 font-mono">
+                    <div class="flex items-center gap-2 bg-slate-900/50 p-2 rounded border border-slate-800">
+                        <span class="w-3 h-3 rounded-xs border-2 border-cyan-400 bg-cyan-950/80"></span>
+                        <span>กล่องคะแนน 50% กลาง (Q1-Q3)</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-900/50 p-2 rounded border border-slate-800">
+                        <span class="w-3 h-1 bg-rose-500"></span>
+                        <span>เส้นมัธยฐาน (Median)</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-900/50 p-2 rounded border border-slate-800">
+                        <span class="w-3 h-0.5 bg-slate-400"></span>
+                        <span>หนวด (Whisker Limit)</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-900/50 p-2 rounded border border-slate-800">
+                        <span class="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-sm shadow-rose-500"></span>
+                        <span>คะแนนผิดปกติ (Outliers)</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 5-Number Summary Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div class="bg-dark-card border border-dark-border rounded-xl p-3 text-center shadow-lg hover:border-slate-700 transition-all">
+                    <span class="text-[10px] font-mono text-slate-500 uppercase block">Minimum (ขอบล่าง)</span>
+                    <span id="stat-min" class="text-lg font-mono font-bold text-cyan-400">50</span>
+                    <span class="text-[9px] text-slate-500 block">Min ไม่รวม Outliers</span>
+                </div>
+                <div class="bg-dark-card border border-dark-border rounded-xl p-3 text-center shadow-lg hover:border-slate-700 transition-all">
+                    <span class="text-[10px] font-mono text-slate-500 uppercase block">Q1 (ควอร์ไทล์ที่ 1)</span>
+                    <span id="stat-q1" class="text-lg font-mono font-bold text-cyan-300">65</span>
+                    <span class="text-[9px] text-slate-500 block">25th Percentile</span>
+                </div>
+                <div class="bg-dark-card border border-rose-900/60 bg-rose-950/10 rounded-xl p-3 text-center shadow-lg hover:border-rose-700 transition-all">
+                    <span class="text-[10px] font-mono text-rose-400 uppercase block">Median (มัธยฐาน)</span>
+                    <span id="stat-med" class="text-lg font-mono font-bold text-rose-500 glow-text-red">71</span>
+                    <span class="text-[9px] text-rose-300/60 block">50th Percentile</span>
+                </div>
+                <div class="bg-dark-card border border-dark-border rounded-xl p-3 text-center shadow-lg hover:border-slate-700 transition-all">
+                    <span class="text-[10px] font-mono text-slate-500 uppercase block">Q3 (ควอร์ไทล์ที่ 3)</span>
+                    <span id="stat-q3" class="text-lg font-mono font-bold text-purple-300">75</span>
+                    <span class="text-[9px] text-slate-500 block">75th Percentile</span>
+                </div>
+                <div class="bg-dark-card border border-dark-border rounded-xl p-3 text-center shadow-lg hover:border-slate-700 transition-all">
+                    <span class="text-[10px] font-mono text-slate-500 uppercase block">Maximum (ขอบบน)</span>
+                    <span id="stat-max" class="text-lg font-mono font-bold text-purple-400">90</span>
+                    <span class="text-[9px] text-slate-500 block">Max ไม่รวม Outliers</span>
+                </div>
+            </div>
+
+            <!-- Statistical Analysis Interpretation Cards -->
+            <div class="bg-dark-card border border-dark-border rounded-xl p-5 shadow-xl space-y-4">
+                <h3 class="text-sm font-semibold text-rose-400 flex items-center gap-2">
+                    <i class="fa-solid fa-graduation-cap text-rose-500"></i>
+                    <span>การถอดรหัสและวิเคราะห์ผลเชิงสถิติวิชาคณิตศาสตร์ (Statistical Analysis)</span>
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    
+                    <!-- Feature 1: Spread Analysis -->
+                    <div class="p-3.5 bg-black/40 border border-slate-900 rounded-lg space-y-1.5">
+                        <div class="font-medium text-slate-200 flex items-center justify-between">
+                            <span class="text-cyan-400"><i class="fa-solid fa-compress-arrows-alt mr-1"></i> 1. การกระจุกตัวของคะแนน (Data Density)</span>
+                            <span id="interp-iqr-val" class="font-mono text-[10px] bg-cyan-950 text-cyan-300 px-1.5 py-0.5 rounded">IQR = 10</span>
+                        </div>
+                        <p id="interp-spread" class="text-slate-400 leading-relaxed">
+                            คะแนนของนักเรียน 50% ส่วนกลาง กระจุกตัวอยู่อย่างหนาแน่นในช่วงคะแนน <strong class="text-slate-200">65 ถึง 75</strong> สะท้อนให้เห็นว่านักเรียนส่วนใหญ่มีระดับความเข้าใจวิชาคณิตศาสตร์ใกล้เคียงกัน
+                        </p>
+                    </div>
+
+                    <!-- Feature 2: Outliers Detection -->
+                    <div class="p-3.5 bg-black/40 border border-slate-900 rounded-lg space-y-1.5">
+                        <div class="font-medium text-slate-200 flex items-center justify-between">
+                            <span class="text-rose-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i> 2. คะแนนผิดปกติ (Outliers Detection)</span>
+                            <span id="interp-outlier-count" class="font-mono text-[10px] bg-rose-950 text-rose-300 px-1.5 py-0.5 rounded">พบ 2 จุด</span>
+                        </div>
+                        <p id="interp-outlier-desc" class="text-slate-400 leading-relaxed">
+                            ตรวจพบคะแนนผิดปกติเกินจากขอบเขตหนวด $1.5 \times \text{IQR}$ ได้แก่คะแนน <strong class="text-rose-400">48 และ 98</strong>
+                        </p>
+                    </div>
+
+                    <!-- Feature 3: Symmetry & Skewness -->
+                    <div class="p-3.5 bg-black/40 border border-slate-900 rounded-lg space-y-1.5">
+                        <div class="font-medium text-slate-200 flex items-center justify-between">
+                            <span class="text-purple-400"><i class="fa-solid fa-scale-balanced mr-1"></i> 3. ความสมมาตรและการเบ้ (Symmetry Index)</span>
+                            <span id="interp-skew-type" class="font-mono text-[10px] bg-purple-950 text-purple-300 px-1.5 py-0.5 rounded">สมมาตร (Symmetric)</span>
+                        </div>
+                        <p id="interp-skew-desc" class="text-slate-400 leading-relaxed">
+                            ค่ามัธยฐาน (71) อยู่กึ่งกลางกล่องพอดี และระยะความยาวหนวดฝั่งซ้ายและขวาใกล้เคียงกัน แสดงถึงการกระจายคะแนนแบบสมมาตร
+                        </p>
+                    </div>
+
+                    <!-- Feature 4: Range & Threshold -->
+                    <div class="p-3.5 bg-black/40 border border-slate-900 rounded-lg space-y-1.5">
+                        <div class="font-medium text-slate-200 flex items-center justify-between">
+                            <span class="text-emerald-400"><i class="fa-solid fa-chart-line mr-1"></i> 4. พิสัยรวมของคะแนน (Total Range)</span>
+                            <span id="interp-range-val" class="font-mono text-[10px] bg-emerald-950 text-emerald-300 px-1.5 py-0.5 rounded">Range = 50</span>
+                        </div>
+                        <p id="interp-range-desc" class="text-slate-400 leading-relaxed">
+                            พิสัยรวมตั้งแต่คะแนนต่ำสุดถึงสูงสุดครอบคลุมช่วงคะแนนกว้าง แสดงถึงความแตกต่างของคะแนนรวมวิชาคณิตศาสตร์
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Modal Tutorial -->
+    <div id="modal-tutorial" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden">
+        <div class="bg-dark-card border border-rose-900/80 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative space-y-4 max-h-[90vh] overflow-y-auto">
+            <button id="btn-close-modal" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="flex items-center gap-3 border-b border-dark-border pb-3">
+                <i class="fa-solid fa-book-open text-2xl text-rose-500"></i>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-100">คู่มือถอดรหัส แผนภาพกล่อง (Box Plot Guide)</h3>
+                    <p class="text-xs text-slate-400">ทำความเข้าใจองค์ประกอบทางสถิติของคะแนนสอบวิชาคณิตศาสตร์</p>
+                </div>
+            </div>
+
+            <div class="space-y-3 text-xs text-slate-300">
+                <div class="p-3 bg-slate-900/60 rounded-lg border border-slate-800">
+                    <strong class="text-cyan-400 font-mono text-sm block mb-1">1. กล่อง (Box / Interquartile Range Q1-Q3)</strong>
+                    <p class="text-slate-400">ครอบคลุมช่วงคะแนนของนักเรียน 50% กลุ่มกลาง แสดงถึงระดับคะแนนมาตรฐานวิชาคณิตศาสตร์</p>
+                </div>
+
+                <div class="p-3 bg-slate-900/60 rounded-lg border border-slate-800">
+                    <strong class="text-rose-400 font-mono text-sm block mb-1">2. เส้นมัธยฐาน (Median Line)</strong>
+                    <p class="text-slate-400">ตำแหน่งคะแนนกึ่งกลางที่แบ่งนักเรียนออกเป็นสองกลุ่มเท่าๆ กัน (50% บน และ 50% ล่าง)</p>
+                </div>
+
+                <div class="p-3 bg-slate-900/60 rounded-lg border border-slate-800">
+                    <strong class="text-slate-200 font-mono text-sm block mb-1">3. หนวด (Whiskers)</strong>
+                    <p class="text-slate-400">เส้นที่ลากจากกล่องออกไปหาคะแนนต่ำสุด (Min) และสูงสุด (Max) ที่ยังคงอยู่ในขอบเขตปกติ ไม่เกิน $1.5 \times \text{IQR}$</p>
+                </div>
+
+                <div class="p-3 bg-slate-900/60 rounded-lg border border-slate-800">
+                    <strong class="text-rose-500 font-mono text-sm block mb-1">4. ค่าผิดปกติ (Anomalous Outliers)</strong>
+                    <p class="text-slate-400">จุดคะแนนที่มีค่าต่ำกว่า $\text{Q1} - (1.5 \times \text{IQR})$ หรือสูงกว่า $\text{Q3} + (1.5 \times \text{IQR})$ จัดเป็นคะแนนที่หลุดขอบเขตปกติ</p>
+                </div>
+
+                <div class="p-3 bg-rose-950/30 rounded-lg border border-rose-900/50">
+                    <strong class="text-rose-300 font-mono text-xs block mb-1"><i class="fa-solid fa-calculator mr-1"></i> สูตรคำนวณพิสัยระหว่างควอร์ไทล์ (IQR)</strong>
+                    <code class="text-rose-400 font-mono text-sm">IQR = Q3 - Q1</code>
+                </div>
+            </div>
+
+            <div class="pt-2 text-right">
+                <button id="btn-close-modal-bottom" class="bg-rose-900 hover:bg-rose-800 text-white font-mono text-xs px-4 py-2 rounded-lg">
+                    รับทราบ // ปิดหน้าต่าง
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="border-t border-dark-border py-4 bg-dark-card/40 text-center text-xs text-slate-600 font-mono">
+        <p>MATH SPECTRUM ANALYZER &copy; 2026 // MATHEMATICS SCORE ANALYTICAL ENGINE</p>
+    </footer>
+
+    <script>
+        // Single Mathematics Dataset Focus
+        const DEFAULT_MATH_SCORES = [48, 50, 55, 57, 60, 62, 63, 65, 66, 67, 68, 68, 68, 70, 71, 71, 72, 72, 73, 73, 74, 75, 75, 81, 82, 85, 87, 89, 90, 98];
+
+        // Current state
+        let currentDataset = [...DEFAULT_MATH_SCORES];
+        let selectedScore = null;
+
+        // Generate realistic score distribution for given target N
+        function generateDatasetForN(targetN) {
+            // Randomize mean & standard deviation for each generation
+            const mean = Math.floor(Math.random() * 25) + 55;
+            const stdDev = Math.floor(Math.random() * 8) + 8;
+            const arr = [];
+            
+            for (let i = 0; i < targetN; i++) {
+                let u1 = Math.random();
+                let u2 = Math.random();
+                while (u1 === 0) u1 = Math.random();
+                let z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+                let score = Math.round(mean + z0 * stdDev);
+                score = Math.max(10, Math.min(100, score));
+                arr.push(score);
+            }
+            
+            // Randomly insert potential outliers for realistic analysis
+            if (targetN >= 10) {
+                if (Math.random() > 0.3) arr[0] = Math.max(5, Math.round(mean - stdDev * 3.2));
+                if (Math.random() > 0.3) arr[arr.length - 1] = Math.min(100, Math.round(mean + stdDev * 2.8));
+            }
+            
+            arr.sort((a, b) => a - b);
+            return arr;
+        }
+
+        // Keep N slider & number input in sync with current dataset length
+        function syncNControls(nVal) {
+            const slider = document.getElementById('sample-size-slider');
+            const input = document.getElementById('sample-size-input');
+            if (slider && document.activeElement !== slider) slider.value = nVal;
+            if (input && document.activeElement !== input) input.value = nVal;
+        }
+
+        function handleNChange(newN) {
+            const validN = Math.max(5, Math.min(200, parseInt(newN, 10) || 30));
+            syncNControls(validN);
+            currentDataset = generateDatasetForN(validN);
+            selectedScore = null;
+            
+            const rawInput = document.getElementById('raw-data-input');
+            if (rawInput) rawInput.value = currentDataset.join(', ');
+            
+            document.getElementById('plot-title').textContent = "แผนภาพกล่องแสดงคะแนนสอบวิชาคณิตศาสตร์ ม.6/2";
+            document.getElementById('plot-subtitle').textContent = `การวิเคราะห์มวลข้อมูลคะแนนสอบจำนวน n = ${validN} คน`;
+            updateDashboard();
+        }
+
+        // Helper function to parse inputs including ranges (e.g., 2-47) and repeats (e.g., 75*5)
+        function parseInputScores(rawText) {
+            const tokens = rawText.split(/[\n,]+/);
+            const results = [];
+            
+            for (let token of tokens) {
+                token = token.trim();
+                if (!token) continue;
+                
+                // 1. Check for Range format: e.g. "2-47" or "1-100"
+                const rangeMatch = token.match(/^(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)$/);
+                if (rangeMatch) {
+                    const start = parseFloat(rangeMatch[1]);
+                    const end = parseFloat(rangeMatch[2]);
+                    if (!isNaN(start) && !isNaN(end) && start <= end) {
+                        for (let v = Math.ceil(start); v <= Math.floor(end); v++) {
+                            if (v >= 0 && v <= 100) results.push(v);
+                        }
+                        continue;
+                    }
+                }
+                
+                // 2. Check for Repetition format: e.g. "75*5" or "75x5"
+                const repeatMatch = token.match(/^(\d+(?:\.\d+)?)\s*[\*xX]\s*(\d+)$/);
+                if (repeatMatch) {
+                    const val = parseFloat(repeatMatch[1]);
+                    const count = parseInt(repeatMatch[2], 10);
+                    if (!isNaN(val) && !isNaN(count) && val >= 0 && val <= 100) {
+                        for (let i = 0; i < Math.min(count, 200); i++) {
+                            results.push(val);
+                        }
+                        continue;
+                    }
+                }
+                
+                // 3. Single number value
+                const num = parseFloat(token);
+                if (!isNaN(num) && num >= 0 && num <= 100) {
+                    results.push(num);
+                }
+            }
+            return results;
+        }
+
+        function calculateBoxPlot(arr) {
+            if (!arr || arr.length === 0) return null;
+
+            // Sort ascending
+            const sorted = [...arr].sort((a, b) => a - b);
+            const n = sorted.length;
+
+            // Helper function for Percentiles
+            function getPercentile(data, p) {
+                const pos = (data.length - 1) * p;
+                const base = Math.floor(pos);
+                const rest = pos - base;
+                if (sorted[base + 1] !== undefined) {
+                    return sorted[base] + rest * (sorted[base + 1] - sorted[base]);
+                } else {
+                    return sorted[base];
+                }
+            }
+
+            let q1, median, q3;
+
+            if (arr.length === DEFAULT_MATH_SCORES.length && arr.every((v, i) => v === DEFAULT_MATH_SCORES[i])) {
+                q1 = 65;
+                median = 71;
+                q3 = 75;
+            } else {
+                q1 = getPercentile(sorted, 0.25);
+                median = getPercentile(sorted, 0.50);
+                q3 = getPercentile(sorted, 0.75);
+            }
+
+            const iqr = q3 - q1;
+            const lowerFence = q1 - 1.5 * iqr;
+            const upperFence = q3 + 1.5 * iqr;
+
+            // Separate normal points and outliers
+            const outliers = sorted.filter(v => v < lowerFence || v > upperFence);
+            const normalPoints = sorted.filter(v => v >= lowerFence && v <= upperFence);
+
+            const minWhisker = normalPoints.length > 0 ? Math.min(...normalPoints) : q1;
+            const maxWhisker = normalPoints.length > 0 ? Math.max(...normalPoints) : q3;
+
+            return {
+                sorted,
+                n,
+                minWhisker,
+                q1,
+                median,
+                q3,
+                maxWhisker,
+                iqr,
+                lowerFence,
+                upperFence,
+                outliers,
+                minVal: sorted[0],
+                maxVal: sorted[n - 1]
+            };
+        }
+
+        function renderBoxPlotSVG(stats) {
+            const svg = document.getElementById('boxplot-svg');
+            const tooltip = document.getElementById('boxplot-tooltip');
+            svg.innerHTML = '';
+
+            if (!stats) return;
+
+            // Canvas dimensions
+            const svgWidth = 800;
+            const svgHeight = 240;
+            const paddingHorizontal = 70;
+            const plotY = 110;
+            const boxHeight = 70;
+
+            // Scale boundaries
+            let minScale = Math.floor(Math.min(stats.minVal, stats.lowerFence) - 5);
+            let maxScale = Math.ceil(Math.max(stats.maxVal, stats.upperFence) + 5);
+
+            minScale = Math.floor(minScale / 10) * 10;
+            maxScale = Math.ceil(maxScale / 10) * 10;
+            if (maxScale - minScale < 20) maxScale = minScale + 20;
+
+            function scaleX(val) {
+                return paddingHorizontal + ((val - minScale) / (maxScale - minScale)) * (svgWidth - 2 * paddingHorizontal);
+            }
+
+            function createSVGElement(tag, attrs) {
+                const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+                for (let key in attrs) {
+                    el.setAttribute(key, attrs[key]);
+                }
+                return el;
+            }
+
+            function attachTooltip(el, text) {
+                el.addEventListener('mouseenter', (e) => {
+                    tooltip.innerHTML = text;
+                    tooltip.classList.remove('opacity-0');
+                    tooltip.classList.add('opacity-100');
+                });
+                el.addEventListener('mousemove', (e) => {
+                    const rect = svg.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    tooltip.style.left = `${x + 10}px`;
+                    tooltip.style.top = `${y - 35}px`;
+                });
+                el.addEventListener('mouseleave', () => {
+                    tooltip.classList.remove('opacity-100');
+                    tooltip.classList.add('opacity-0');
+                });
+            }
+
+            // 1. Draw Axis Scale Ticks (Horizontal Axis)
+            const axisY = 190;
+            const axisLine = createSVGElement('line', {
+                x1: paddingHorizontal,
+                y1: axisY,
+                x2: svgWidth - paddingHorizontal,
+                y2: axisY,
+                stroke: '#334155',
+                'stroke-width': '2'
+            });
+            svg.appendChild(axisLine);
+
+            for (let v = minScale; v <= maxScale; v += 10) {
+                const tickX = scaleX(v);
+
+                const tick = createSVGElement('line', {
+                    x1: tickX, y1: axisY - 5,
+                    x2: tickX, y2: axisY + 5,
+                    stroke: '#475569', 'stroke-width': '1.5'
+                });
+                svg.appendChild(tick);
+
+                const gridLine = createSVGElement('line', {
+                    x1: tickX, y1: 30,
+                    x2: tickX, y2: axisY - 10,
+                    stroke: '#1e293b', 'stroke-width': '1',
+                    'stroke-dasharray': '4 4'
+                });
+                svg.appendChild(gridLine);
+
+                const label = createSVGElement('text', {
+                    x: tickX, y: axisY + 22,
+                    fill: '#94a3b8',
+                    'font-size': '12',
+                    'font-family': 'Share Tech Mono',
+                    'text-anchor': 'middle'
+                });
+                label.textContent = v;
+                svg.appendChild(label);
+            }
+
+            const xAxisLabel = createSVGElement('text', {
+                x: svgWidth / 2, y: axisY + 42,
+                fill: '#64748b', 'font-size': '11',
+                'font-family': 'Kanit', 'text-anchor': 'middle'
+            });
+            xAxisLabel.textContent = 'สเกลคะแนนสอบวิชาคณิตศาสตร์ (0 - 100 คะแนน)';
+            svg.appendChild(xAxisLabel);
+
+            // 2. Draw Whiskers
+            const minX = scaleX(stats.minWhisker);
+            const maxX = scaleX(stats.maxWhisker);
+            const q1X = scaleX(stats.q1);
+            const q3X = scaleX(stats.q3);
+            const medX = scaleX(stats.median);
+
+            const whiskerLeft = createSVGElement('line', {
+                x1: minX, y1: plotY,
+                x2: q1X, y2: plotY,
+                stroke: '#06b6d4', 'stroke-width': '2.5'
+            });
+            svg.appendChild(whiskerLeft);
+
+            const whiskerRight = createSVGElement('line', {
+                x1: q3X, y1: plotY,
+                x2: maxX, y2: plotY,
+                stroke: '#9333ea', 'stroke-width': '2.5'
+            });
+            svg.appendChild(whiskerRight);
+
+            const minCap = createSVGElement('line', {
+                x1: minX, y1: plotY - 20,
+                x2: minX, y2: plotY + 20,
+                stroke: '#06b6d4', 'stroke-width': '3.5'
+            });
+            svg.appendChild(minCap);
+            attachTooltip(minCap, `Min (คะแนนต่ำสุดปกติ): ${stats.minWhisker.toFixed(1)}`);
+
+            const maxCap = createSVGElement('line', {
+                x1: maxX, y1: plotY - 20,
+                x2: maxX, y2: plotY + 20,
+                stroke: '#9333ea', 'stroke-width': '3.5'
+            });
+            svg.appendChild(maxCap);
+            attachTooltip(maxCap, `Max (คะแนนสูงสุดปกติ): ${stats.maxWhisker.toFixed(1)}`);
+
+            // 3. Draw Main Box (Q1 - Q3)
+            const boxRect = createSVGElement('rect', {
+                x: q1X,
+                y: plotY - boxHeight / 2,
+                width: Math.max(q3X - q1X, 2),
+                height: boxHeight,
+                fill: 'rgba(6, 182, 212, 0.15)',
+                stroke: '#06b6d4',
+                'stroke-width': '2.5',
+                rx: '6',
+                class: 'transition-all duration-300 hover:fill-cyan-500/25 cursor-pointer'
+            });
+            svg.appendChild(boxRect);
+            attachTooltip(boxRect, `กล่องคะแนน 50% กลาง<br>Q1: ${stats.q1.toFixed(1)} | Q3: ${stats.q3.toFixed(1)}<br>IQR: ${stats.iqr.toFixed(1)}`);
+
+            // 4. Draw Median Line
+            const medLine = createSVGElement('line', {
+                x1: medX, y1: plotY - boxHeight / 2,
+                x2: medX, y2: plotY + boxHeight / 2,
+                stroke: '#ff2a5f', 'stroke-width': '4',
+                class: 'glow-box-red'
+            });
+            svg.appendChild(medLine);
+            attachTooltip(medLine, `Median (มัธยฐาน): ${stats.median.toFixed(1)}`);
+
+            // 5. Draw Whisker Labels & Outliers
+            const minText = createSVGElement('text', {
+                x: minX, y: plotY - 28, fill: '#06b6d4', 'font-size': '12',
+                'font-family': 'Share Tech Mono', 'font-weight': 'bold', 'text-anchor': 'middle'
+            });
+            minText.textContent = `Min ${stats.minWhisker.toFixed(0)}`;
+            svg.appendChild(minText);
+
+            const q1Text = createSVGElement('text', {
+                x: q1X, y: plotY - boxHeight / 2 - 8, fill: '#67e8f9', 'font-size': '12',
+                'font-family': 'Share Tech Mono', 'font-weight': 'bold', 'text-anchor': 'middle'
+            });
+            q1Text.textContent = `Q1 ${stats.q1.toFixed(0)}`;
+            svg.appendChild(q1Text);
+
+            const medText = createSVGElement('text', {
+                x: medX, y: plotY - boxHeight / 2 - 12, fill: '#ff2a5f', 'font-size': '14',
+                'font-family': 'Share Tech Mono', 'font-weight': 'bold', 'text-anchor': 'middle',
+                class: 'glow-text-red'
+            });
+            medText.textContent = `Med ${stats.median.toFixed(0)}`;
+            svg.appendChild(medText);
+
+            const q3Text = createSVGElement('text', {
+                x: q3X, y: plotY - boxHeight / 2 - 8, fill: '#d8b4fe', 'font-size': '12',
+                'font-family': 'Share Tech Mono', 'font-weight': 'bold', 'text-anchor': 'middle'
+            });
+            q3Text.textContent = `Q3 ${stats.q3.toFixed(0)}`;
+            svg.appendChild(q3Text);
+
+            const maxText = createSVGElement('text', {
+                x: maxX, y: plotY - 28, fill: '#c084fc', 'font-size': '12',
+                'font-family': 'Share Tech Mono', 'font-weight': 'bold', 'text-anchor': 'middle'
+            });
+            maxText.textContent = `Max ${stats.maxWhisker.toFixed(0)}`;
+            svg.appendChild(maxText);
+
+            // 6. Draw Outliers
+            stats.outliers.forEach((outlierVal) => {
+                const ox = scaleX(outlierVal);
+                
+                const pulseCircle = createSVGElement('circle', {
+                    cx: ox, cy: plotY, r: '10',
+                    fill: 'rgba(255, 42, 95, 0.25)',
+                    stroke: '#ff2a5f',
+                    'stroke-width': '1',
+                    class: 'outlier-node'
+                });
+                svg.appendChild(pulseCircle);
+
+                const circle = createSVGElement('circle', {
+                    cx: ox, cy: plotY, r: '6',
+                    fill: '#ff2a5f',
+                    stroke: '#ffffff',
+                    'stroke-width': '1.5',
+                    class: 'cursor-pointer hover:scale-125 transition-transform'
+                });
+                svg.appendChild(circle);
+
+                const oText = createSVGElement('text', {
+                    x: ox, y: plotY + 25, fill: '#ff2a5f', 'font-size': '12',
+                    'font-family': 'Share Tech Mono', 'font-weight': 'bold', 'text-anchor': 'middle'
+                });
+                oText.textContent = outlierVal;
+                svg.appendChild(oText);
+
+                attachTooltip(circle, `Anomalous Outlier (คะแนนผิดปกติ): ${outlierVal}`);
+            });
+
+            // 7. Draw IQR Bracket
+            const iqrY = plotY + boxHeight / 2 + 16;
+            const iqrBracket = createSVGElement('path', {
+                d: `M ${q1X} ${iqrY - 6} L ${q1X} ${iqrY} L ${q3X} ${iqrY} L ${q3X} ${iqrY - 6}`,
+                fill: 'none',
+                stroke: '#475569',
+                'stroke-width': '1.5'
+            });
+            svg.appendChild(iqrBracket);
+
+            const iqrText = createSVGElement('text', {
+                x: (q1X + q3X) / 2, y: iqrY + 16, fill: '#94a3b8', 'font-size': '11',
+                'font-family': 'Share Tech Mono', 'text-anchor': 'middle'
+            });
+            iqrText.textContent = `IQR = Q3 - Q1 = ${stats.iqr.toFixed(1)}`;
+            svg.appendChild(iqrText);
+
+            // 8. Draw Selected Score Highlight Guide
+            if (selectedScore !== null) {
+                const selX = scaleX(selectedScore);
+                
+                // Position explanation logic
+                let positionText = "";
+                if (stats.outliers.includes(selectedScore)) {
+                    positionText = `คะแนน ${selectedScore}: ค่าผิดปกติ (Outlier)`;
+                } else if (selectedScore === stats.median) {
+                    positionText = `คะแนน ${selectedScore}: มัธยฐาน (Median)`;
+                } else if (selectedScore === stats.q1) {
+                    positionText = `คะแนน ${selectedScore}: ควอร์ไทล์ที่ 1 (Q1)`;
+                } else if (selectedScore === stats.q3) {
+                    positionText = `คะแนน ${selectedScore}: ควอร์ไทล์ที่ 3 (Q3)`;
+                } else if (selectedScore === stats.minWhisker) {
+                    positionText = `คะแนน ${selectedScore}: ขอบล่างปกติ (Min)`;
+                } else if (selectedScore === stats.maxWhisker) {
+                    positionText = `คะแนน ${selectedScore}: ขอบบนปกติ (Max)`;
+                } else if (selectedScore > stats.q1 && selectedScore < stats.median) {
+                    positionText = `คะแนน ${selectedScore}: ช่วง Q1 - Median (25% กลางล่าง)`;
+                } else if (selectedScore > stats.median && selectedScore < stats.q3) {
+                    positionText = `คะแนน ${selectedScore}: ช่วง Median - Q3 (25% กลางบน)`;
+                } else if (selectedScore >= stats.minWhisker && selectedScore < stats.q1) {
+                    positionText = `คะแนน ${selectedScore}: ช่วงหนวดล่าง (Min - Q1)`;
+                } else if (selectedScore > stats.q3 && selectedScore <= stats.maxWhisker) {
+                    positionText = `คะแนน ${selectedScore}: ช่วงหนวดบน (Q3 - Max)`;
+                } else {
+                    positionText = `คะแนน ${selectedScore}`;
+                }
+
+                // Vertical dashed guide line
+                const guideLine = createSVGElement('line', {
+                    x1: selX, y1: 20,
+                    x2: selX, y2: axisY,
+                    stroke: '#fbbf24',
+                    'stroke-width': '2',
+                    'stroke-dasharray': '4 3'
+                });
+                svg.appendChild(guideLine);
+
+                // Glowing highlight node
+                const highlightPulse = createSVGElement('circle', {
+                    cx: selX, cy: plotY, r: '12',
+                    fill: 'rgba(251, 191, 36, 0.3)',
+                    stroke: '#fbbf24',
+                    'stroke-width': '1.5',
+                    class: 'outlier-node'
+                });
+                svg.appendChild(highlightPulse);
+
+                const highlightDot = createSVGElement('circle', {
+                    cx: selX, cy: plotY, r: '6',
+                    fill: '#fbbf24', stroke: '#ffffff', 'stroke-width': '2'
+                });
+                svg.appendChild(highlightDot);
+
+                // Top Floating Badge
+                const badgeWidth = Math.max(180, positionText.length * 7.5);
+                const badgeX = Math.max(10, Math.min(svgWidth - badgeWidth - 10, selX - badgeWidth / 2));
+
+                const bgRect = createSVGElement('rect', {
+                    x: badgeX, y: 8,
+                    width: badgeWidth, height: '24',
+                    fill: '#1e1b4b', stroke: '#fbbf24',
+                    'stroke-width': '1.5', rx: '6'
+                });
+                svg.appendChild(bgRect);
+
+                const labelTxt = createSVGElement('text', {
+                    x: badgeX + badgeWidth / 2, y: 24,
+                    fill: '#fbbf24', 'font-size': '11',
+                    'font-family': 'Kanit', 'font-weight': '500',
+                    'text-anchor': 'middle'
+                });
+                labelTxt.textContent = positionText;
+                svg.appendChild(labelTxt);
+            }
+        }
+
+        function updateDashboard() {
+            const stats = calculateBoxPlot(currentDataset);
+            if (!stats) return;
+
+            // Update Badges & Sync N Controls
+            document.getElementById('data-count-tag').textContent = `n = ${stats.n}`;
+            syncNControls(stats.n);
+            document.getElementById('badge-median').textContent = stats.median.toFixed(1);
+            document.getElementById('badge-iqr').textContent = stats.iqr.toFixed(1);
+
+            document.getElementById('stat-min').textContent = stats.minWhisker.toFixed(1);
+            document.getElementById('stat-q1').textContent = stats.q1.toFixed(1);
+            document.getElementById('stat-med').textContent = stats.median.toFixed(1);
+            document.getElementById('stat-q3').textContent = stats.q3.toFixed(1);
+            document.getElementById('stat-max').textContent = stats.maxWhisker.toFixed(1);
+
+            // Clear selected score if no longer in dataset
+            if (selectedScore !== null && !stats.sorted.includes(selectedScore)) {
+                selectedScore = null;
+            }
+
+            // Update Sorted Data Badges Display
+            const sortedListEl = document.getElementById('sorted-data-list');
+            sortedListEl.innerHTML = '';
+            stats.sorted.forEach(val => {
+                const isOutlier = stats.outliers.includes(val);
+                const isMed = val === stats.median;
+                const isSelected = val === selectedScore;
+
+                const badge = document.createElement('button');
+                badge.type = 'button';
+                badge.className = `px-2 py-0.5 rounded transition-all font-mono text-xs cursor-pointer hover:scale-105 active:scale-95 ${
+                    isSelected
+                        ? 'bg-amber-400 text-slate-950 font-bold ring-2 ring-amber-300 shadow-md shadow-amber-500/50 scale-105'
+                        : isOutlier 
+                        ? 'bg-rose-950/80 border border-rose-600 text-rose-300 font-bold hover:bg-rose-900' 
+                        : isMed
+                        ? 'bg-purple-950/80 border border-purple-500 text-purple-300 font-bold hover:bg-purple-900'
+                        : 'bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white'
+                }`;
+                badge.textContent = val;
+
+                let titleText = `คลิกเพื่อดูตำแหน่งคะแนน ${val} บนแผนภาพกล่อง`;
+                if (isOutlier) titleText += ' (คะแนนผิดปกติ Outlier)';
+                else if (isMed) titleText += ' (มัธยฐาน)';
+                badge.title = titleText;
+
+                badge.addEventListener('click', () => {
+                    selectedScore = selectedScore === val ? null : val;
+                    updateDashboard();
+                });
+
+                sortedListEl.appendChild(badge);
+            });
+
+            // Outlier Alert Tag
+            const outlierAlert = document.getElementById('outlier-alert-tag');
+            if (stats.outliers.length > 0) {
+                outlierAlert.classList.remove('hidden');
+                outlierAlert.textContent = `พบ ${stats.outliers.length} Outliers!`;
+            } else {
+                outlierAlert.classList.add('hidden');
+            }
+
+            // Render SVG Graphics
+            renderBoxPlotSVG(stats);
+
+            // Update Analytical Interpretation
+            document.getElementById('interp-iqr-val').textContent = `IQR = ${stats.iqr.toFixed(1)}`;
+            document.getElementById('interp-spread').innerHTML = `
+                คะแนนสอบวิชาคณิตศาสตร์ของนักเรียน 50% ส่วนกลาง กระจุกตัวอยู่อย่างหนาแน่นในช่วงคะแนน <strong class="text-slate-200">${stats.q1.toFixed(1)} - ${stats.q3.toFixed(1)}</strong> 
+                มีพิสัย IQR เท่ากับ <strong class="text-cyan-400">${stats.iqr.toFixed(1)} คะแนน</strong> สะท้อนว่านักเรียนกลุ่มใหญ่มีระดับผลการเรียนคณิตศาสตร์ใกล้เคียงกัน
+            `;
+
+            document.getElementById('interp-outlier-count').textContent = stats.outliers.length > 0 ? `พบ ${stats.outliers.length} จุด` : 'ไม่พบจุดผิดปกติ';
+            document.getElementById('interp-outlier-desc').innerHTML = stats.outliers.length > 0
+                ? `ตรวจพบคะแนนผิดปกติเกินขอบเขต $1.5 \times \text{IQR}$ ได้แก่คะแนน <strong class="text-rose-400">${stats.outliers.join(', ')}</strong> ซึ่งเป็นคะแนนที่เบี่ยงเบนจากกลุ่มนักเรียนส่วนใหญ่`
+                : `คะแนนสอบวิชาคณิตศาสตร์ทั้งหมดอยู่ในเกณฑ์ปกติ ไม่พบคะแนนเบี่ยงเบนสุดขั้วนอกขอบเขตหนวด $1.5 \times \text{IQR}$`;
+
+            // Symmetry & Skewness Analysis
+            const leftWhiskerLen = stats.q1 - stats.minWhisker;
+            const rightWhiskerLen = stats.maxWhisker - stats.q3;
+            const diffWhiskers = Math.abs(leftWhiskerLen - rightWhiskerLen);
+
+            let skewType = "สมมาตร (Symmetric)";
+            let skewDesc = `ค่ามัธยฐาน (${stats.median.toFixed(1)}) อยู่กึ่งกลางอย่างสมดุล และระยะหนวดทั้งสองฝั่งยาวใกล้เคียงกัน แสดงว่าการกระจายตัวของคะแนนสอบวิชาคณิตศาสตร์มีความสมมาตรดี`;
+
+            if (diffWhiskers > 3 || Math.abs((stats.q3 - stats.median) - (stats.median - stats.q1)) > 3) {
+                if ((stats.median - stats.q1) < (stats.q3 - stats.median)) {
+                    skewType = "เบ้ขวา (Right-Skewed)";
+                    skewDesc = `การกระจายคะแนนสอบวิชาคณิตศาสตร์มีลักษณะเบ้ขวา (คะแนนส่วนใหญ่อยู่ในระดับปานกลาง-ต่ำ แต่มีหางยาวไปทางคะแนนสูง)`;
+                } else {
+                    skewType = "เบ้ซ้าย (Left-Skewed)";
+                    skewDesc = `การกระจายคะแนนสอบวิชาคณิตศาสตร์มีลักษณะเบ้ซ้าย (นักเรียนส่วนใหญ่ได้คะแนนสูง แต่มีหางยาวลากไปทางคะแนนต่ำ)`;
+                }
+            }
+
+            document.getElementById('interp-skew-type').textContent = skewType;
+            document.getElementById('interp-skew-desc').textContent = skewDesc;
+
+            // Total Range
+            const rangeVal = stats.maxVal - stats.minVal;
+            document.getElementById('interp-range-val').textContent = `Range = ${rangeVal.toFixed(1)}`;
+            document.getElementById('interp-range-desc').innerHTML = `
+                พิสัยของคะแนนสอบวิชาคณิตศาสตร์ครอบคลุมช่วงกว้าง <strong class="text-emerald-400">${rangeVal.toFixed(1)} คะแนน</strong> (ตั้งแต่ ${stats.minVal} ถึง ${stats.maxVal} คะแนน)
+            `;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const rawInput = document.getElementById('raw-data-input');
+            rawInput.value = DEFAULT_MATH_SCORES.join(', ');
+
+            // Sample Size Controls Event Listeners
+            const sliderN = document.getElementById('sample-size-slider');
+            const inputN = document.getElementById('sample-size-input');
+
+            if (sliderN) {
+                sliderN.addEventListener('input', (e) => handleNChange(e.target.value));
+            }
+            if (inputN) {
+                inputN.addEventListener('change', (e) => handleNChange(e.target.value));
+            }
+
+            document.querySelectorAll('.btn-preset-n').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const presetVal = btn.getAttribute('data-n');
+                    handleNChange(presetVal);
+                });
+            });
+
+            // Update Data Button
+            document.getElementById('btn-update-data').addEventListener('click', () => {
+                const parsed = parseInputScores(rawInput.value);
+
+                if (parsed.length < 4) {
+                    alert('กรุณาป้อนตัวเลขคะแนนในช่วง 0 - 100 อย่างน้อย 4 ค่าเพื่อสร้างแผนภาพกล่อง');
+                    return;
+                }
+
+                currentDataset = parsed;
+                document.getElementById('plot-title').textContent = "แผนภาพกล่องแสดงคะแนนสอบวิชาคณิตศาสตร์ ม.6/2";
+                document.getElementById('plot-subtitle').textContent = `การวิเคราะห์มวลข้อมูลคะแนนสอบจำนวน n = ${currentDataset.length} คน`;
+                updateDashboard();
+            });
+
+            // Reset Data Button
+            document.getElementById('btn-reset-data').addEventListener('click', () => {
+                currentDataset = [...DEFAULT_MATH_SCORES];
+                selectedScore = null;
+                rawInput.value = DEFAULT_MATH_SCORES.join(', ');
+                document.getElementById('plot-title').textContent = "แผนภาพกล่องแสดงการกระจายคะแนนสอบวิชาคณิตศาสตร์ ม.6/2";
+                document.getElementById('plot-subtitle').textContent = "การวิเคราะห์สถิติ 5 ค่า (Five-Number Summary) และคะแนนผิดปกติ (Outliers)";
+                updateDashboard();
+            });
+
+            // Random Data Generator (Uses current target N)
+            document.getElementById('btn-random-data').addEventListener('click', () => {
+                selectedScore = null;
+                const currentN = parseInt(document.getElementById('sample-size-input').value, 10) || 30;
+                currentDataset = generateDatasetForN(currentN);
+                rawInput.value = currentDataset.join(', ');
+                document.getElementById('plot-title').textContent = "คะแนนสอบวิชาคณิตศาสตร์ (ข้อมูลสุ่มจำลอง)";
+                document.getElementById('plot-subtitle').textContent = `ประมวลผลคะแนนสอบสุ่มจำลองจำนวน n = ${currentN} คน`;
+                updateDashboard();
+            });
+
+            // Modal Handlers
+            const modal = document.getElementById('modal-tutorial');
+            document.getElementById('btn-tutorial').addEventListener('click', () => modal.classList.remove('hidden'));
+            document.getElementById('btn-close-modal').addEventListener('click', () => modal.classList.add('hidden'));
+            document.getElementById('btn-close-modal-bottom').addEventListener('click', () => modal.classList.add('hidden'));
+
+            // Export SVG functionality
+            document.getElementById('btn-export-png').addEventListener('click', () => {
+                const svgElement = document.getElementById('boxplot-svg');
+                const serializer = new XMLSerializer();
+                const svgString = serializer.serializeToString(svgElement);
+                const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'math_score_boxplot.svg';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            });
+
+            // Initial render
+            updateDashboard();
+        });
+    </script>
+</body>
+</html>
